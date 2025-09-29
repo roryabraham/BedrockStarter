@@ -5,28 +5,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
     libpcre++-dev \
     zlib1g-dev \
     git \
-    netcat \
     cmake \
     ninja-build \
     clang-18 \
-    clang++-18 \
     libc++-18-dev \
     libc++abi-18-dev \
-    lld-18 \
     mold \
     php8.4-fpm \
     php8.4-cli \
-    php8.4-json \
-    php8.4-mbstring \
     nginx \
     systemd \
-    systemd-sysv \
     curl \
-    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up Clang as default compiler
