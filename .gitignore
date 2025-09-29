@@ -86,8 +86,9 @@ Thumbs.db
 *.log
 
 # Core dumps
-core
-core.*
+/core
+core.dump
+core.[0-9]*
 
 # Temporary files
 *.tmp
