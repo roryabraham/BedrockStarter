@@ -43,7 +43,7 @@ COPY nginx.conf /etc/nginx/sites-available/api
 RUN ln -sf /etc/nginx/sites-available/api /etc/nginx/sites-enabled/api \
     && rm -f /etc/nginx/sites-enabled/default
 
-# Copy startup script
+# Copy startup script and make executable
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
