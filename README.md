@@ -16,70 +16,83 @@ Bedrock is a simple, modular, WAN-replicated, blockchain-based data foundation f
 This starter project provides a complete development environment with:
 
 ```
-/app/
-├── Bedrock/                    # Official Bedrock database (cloned from GitHub)
-│   ├── bedrock                 # Compiled Bedrock binary
-│   └── bedrock.db             # SQLite database file
-└── server/                     # Your application code
-    ├── api/                    # PHP REST API server
-    │   ├── composer.json       # PHP dependencies
-    │   ├── api.php            # Simple REST API endpoints
-    │   └── nginx.conf         # Nginx configuration
-    └── core/                   # C++ Bedrock plugin
-        ├── Core.h/.cpp        # Main plugin class (extends BedrockPlugin)
-        ├── commands/          # Custom Bedrock commands
-        │   └── HelloWorld.h/.cpp  # Example command (extends BedrockCommand)
-        └── CMakeLists.txt     # C++ build configuration
+BedrockStarter/
+├── docker-compose.yml          # Multi-service orchestration
+├── server/
+│   ├── api/                    # PHP API Service
+│   │   ├── Dockerfile         # API container definition
+│   │   ├── start.sh           # API service startup
+│   │   ├── nginx.conf         # Web server configuration
+│   │   ├── composer.json      # PHP dependencies
+│   │   └── api.php           # REST API endpoints
+│   └── core/                   # Bedrock Database Service
+│       ├── Dockerfile         # Bedrock + plugin container
+│       ├── CMakeLists.txt     # C++ build configuration
+│       ├── Core.h/.cpp        # Main plugin class (extends BedrockPlugin)
+│       └── commands/          # Custom Bedrock commands
+│           └── HelloWorld.h/.cpp  # Example command (extends BedrockCommand)
+└── README.md
 ```
 
-## Server Services
+## Services Architecture
 
-The container runs multiple services managed by systemd:
+The project uses a microservices architecture with separate containers:
 
-### 🔧 **Bedrock Database** (Port 8888)
-- **Service**: `bedrock.service`
+### 🔧 **Bedrock Service** (`bedrock-1`)
+- **Container**: Built from `server/core/Dockerfile`
+- **Port**: 8888
 - **Plugin**: Custom `Core` plugin with `HelloWorld` command
 - **Database**: SQLite with full Bedrock features
 - **Access**: Direct socket connection or MySQL protocol
+- **Scaling**: Support for 3-node cluster (uncomment nodes 2 & 3)
 
-### 🌐 **PHP API Server** (Port 80)
-- **Service**: `nginx` + `php8.4-fpm`
-- **Framework**: Simple PHP 8.4 REST API
+### 🌐 **API Service** (`api`)
+- **Container**: Built from `server/api/Dockerfile`
+- **Port**: 80
+- **Stack**: nginx + PHP 8.4 FPM
 - **Endpoints**:
   - `GET /api/status` - Service health check
   - `GET /api/hello?name=World` - Hello world endpoint
 - **Features**: JSON responses, CORS headers, error handling
+- **Communication**: Connects to Bedrock service via internal network
 
 ### ⚙️ **Build System**
 - **C++ Compiler**: Clang with libc++ (C++20, matches Bedrock)
 - **Linker**: mold (ultra-fast linking)
-- **Build Tool**: CMake + Ninja
+- **Build Tools**: CMake + Ninja
 - **Package Manager**: apt-fast (parallel downloads)
 - **Compiler Cache**: ccache (2GB, compressed)
-- **Features**: LTO, sanitizers, modern optimizations
+- **Optimization**: LTO, sanitizers, parallel builds
 
 ## Quick Start
 
 ### Using Docker Compose
 
-1. **Start the development environment:**
+1. **Start all services:**
    ```bash
    docker compose up --build
    ```
 
-2. **Test the API:**
+2. **Start individual services:**
    ```bash
-   curl http://localhost/api/status
-   curl http://localhost/api/hello?name=Developer
+   # Just the API service
+   docker compose up api
+   
+   # Just the Bedrock service
+   docker compose up bedrock-1
    ```
 
-3. **Test Bedrock:**
+3. **Test the services:**
    ```bash
-   # Basic SQL
+   # Test API
+   curl http://localhost/api/status
+   curl http://localhost/api/hello?name=Developer
+   
+   # Test Bedrock database
    nc localhost 8888
    Query: SELECT 1 AS hello, 'world' AS bedrock;
    
-   # Custom plugin command
+   # Test custom plugin
    nc localhost 8888
    HelloWorld name=Developer
    ```
@@ -93,27 +106,36 @@ The container runs multiple services managed by systemd:
 
 For production-like distributed setup:
 
-1. **Uncomment nodes 2 and 3** in `docker-compose.yml`
+1. **Uncomment `bedrock-2` and `bedrock-3`** in `docker-compose.yml`
 
 2. **Start the cluster:**
    ```bash
    docker compose up --build
    ```
 
-3. **Access different nodes:**
+3. **Access different Bedrock nodes:**
    ```bash
    # Node 1 (Primary)
-   curl http://localhost/api/status
    nc localhost 8888
    
    # Node 2 (Follower)  
-   curl http://localhost:81/api/status
    nc localhost 8889
    
    # Node 3 (Follower)
-   curl http://localhost:82/api/status  
    nc localhost 8890
    ```
+
+### Service Scaling
+
+Scale individual services independently:
+
+```bash
+# Scale API service (multiple instances)
+docker compose up --scale api=2
+
+# Scale with load balancer (uncomment api-2 first)
+docker compose up api api-2
+```
 
 ### Example Queries
 
@@ -164,15 +186,15 @@ case '/api/myendpoint':
 
 3. Rebuild the plugin:
    ```bash
-   # Using docker compose (recommended)
-   docker compose build
-   docker compose restart
+   # Rebuild Bedrock service with updated plugin
+   docker compose build bedrock-1
+   docker compose restart bedrock-1
    
    # Or rebuild within running container
-   docker compose exec bedrock-node1 bash
-   cd /app/server/core
+   docker compose exec bedrock-1 bash
+   cd /app/core
    ninja
-   systemctl restart bedrock
+   # Container will restart automatically
    ```
 
 ### Service Management
@@ -181,30 +203,34 @@ case '/api/myendpoint':
 ```bash
 # View logs
 docker compose logs -f
-docker compose logs -f bedrock-node1
+docker compose logs -f bedrock-1  # Specific service
+docker compose logs -f api
 
 # Check service status
 docker compose ps
-docker compose exec bedrock-node1 systemctl status bedrock
+docker compose exec bedrock-1 ps aux  # Check processes
+docker compose exec api ps aux
 
 # Restart services
 docker compose restart
-docker compose restart bedrock-node1
+docker compose restart bedrock-1      # Specific service
+docker compose restart api
 
-# Scale cluster (after uncommenting nodes)
-docker compose up --scale bedrock-node2=1 --scale bedrock-node3=1
+# Rebuild and restart
+docker compose build bedrock-1
+docker compose up -d bedrock-1
 ```
 
-**Within Container:**
+**Service Health:**
 ```bash
-# Check service status
-systemctl status bedrock
-systemctl status nginx
-systemctl status php8.4-fpm
+# Check health status
+docker compose ps
+curl http://localhost/api/status      # API health
+nc -z localhost 8888                  # Bedrock connectivity
 
-# View logs
-journalctl -u bedrock -f
-tail -f /var/log/nginx/api_access.log
+# View service logs
+docker compose logs bedrock-1
+docker compose logs api
 ```
 
 ### Build Configuration

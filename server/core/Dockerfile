@@ -3,14 +3,13 @@ FROM ubuntu:24.04
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install apt-fast, add repositories, and install dependencies
+# Install Bedrock dependencies
 RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     --mount=target=/var/cache/apt,type=cache,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean \
     && apt-get update \
     && apt-get install -y software-properties-common \
     && add-apt-repository ppa:apt-fast/stable -y \
-    && add-apt-repository ppa:ondrej/php -y \
     && apt-get update \
     && apt-get install -y apt-fast \
     && echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections \
@@ -32,11 +31,6 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     python3 \
     python3-jsonschema \
     python3-jinja2 \
-    php8.4-fpm \
-    php8.4-cli \
-    nginx \
-    systemd \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up Clang as default compiler
@@ -63,45 +57,32 @@ ENV CCACHE_DIR=/var/cache/ccache
 ENV CCACHE_COMPRESS=1
 ENV CCACHE_MAXSIZE=2G
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Create application directory structure
+# Create application directory
 WORKDIR /app
 
-# Clone Bedrock as a sibling to server
+# Clone and build Bedrock
 RUN git clone https://github.com/Expensify/Bedrock.git
-
-# Build Bedrock with Clang and ccache
 WORKDIR /app/Bedrock
 ENV CC=clang
 ENV CXX=clang++
 RUN --mount=type=cache,target=/var/cache/ccache \
     make --jobs $(nproc) && touch bedrock.db
 
-# Create server directory structure
+# Copy Core plugin source
 WORKDIR /app
-RUN mkdir -p server/api server/core server/core/commands
-
-# Copy project files
-COPY server/ server/
+COPY . core/
 
 # Build the Core plugin
-WORKDIR /app/server/core
+WORKDIR /app/core
 RUN --mount=type=cache,target=/var/cache/ccache \
     cmake -G Ninja . && ninja -j $(nproc)
 
-# Setup systemd
-RUN systemctl enable nginx
-RUN systemctl enable php8.4-fpm
+# Set library path for plugin loading
+ENV LD_LIBRARY_PATH=/app/core/lib:$LD_LIBRARY_PATH
 
-# Expose ports
-EXPOSE 80 8888
+# Expose Bedrock port
+EXPOSE 8888
 
-# Copy startup script and service files
-COPY start.sh /app/start.sh
-COPY bedrock.service /app/bedrock.service
-RUN chmod +x /app/start.sh
-
-# Start services
-CMD ["/app/start.sh"]
+# Start Bedrock with Core plugin
+WORKDIR /app/Bedrock
+CMD ["./bedrock", "-plugins", "Core", "-pluginDir", "/app/core/lib"]

@@ -1,66 +1,115 @@
 services:
-  bedrock-node1:
-    build: .
+  # Bedrock Database Services
+  bedrock-1:
+    build:
+      context: ./server/core
     ports:
-      - "80:80"      # PHP API
-      - "8888:8888"  # Bedrock database
+      - "8888:8888"
     volumes:
-      # Mount source code for development
-      - ./server:/app/server
-      # Persist database
+      - ./server/core:/app/core
       - bedrock_data_1:/app/Bedrock
     environment:
-      - NODE_NAME=bedrock-node1
+      - NODE_NAME=bedrock-1
       - NODE_ROLE=primary
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8888"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - bedrock-network
+
+  # Additional Bedrock nodes for 3-node cluster (uncomment for distributed setup)
+  # bedrock-2:
+  #   build:
+  #     context: ./server/core
+  #   ports:
+  #     - "8889:8888"
+  #   volumes:
+  #     - ./server/core:/app/core
+  #     - bedrock_data_2:/app/Bedrock
+  #   environment:
+  #     - NODE_NAME=bedrock-2
+  #     - NODE_ROLE=follower
+  #     - PEER_NODES=bedrock-1:8888,bedrock-3:8888
+  #   depends_on:
+  #     - bedrock-1
+  #   healthcheck:
+  #     test: ["CMD", "nc", "-z", "localhost", "8888"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   restart: unless-stopped
+  #   networks:
+  #     - bedrock-network
+
+  # bedrock-3:
+  #   build:
+  #     context: ./server/core
+  #   ports:
+  #     - "8890:8888"
+  #   volumes:
+  #     - ./server/core:/app/core
+  #     - bedrock_data_3:/app/Bedrock
+  #   environment:
+  #     - NODE_NAME=bedrock-3
+  #     - NODE_ROLE=follower
+  #     - PEER_NODES=bedrock-1:8888,bedrock-2:8888
+  #   depends_on:
+  #     - bedrock-1
+  #   healthcheck:
+  #     test: ["CMD", "nc", "-z", "localhost", "8888"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   restart: unless-stopped
+  #   networks:
+  #     - bedrock-network
+
+  # PHP API Service
+  api:
+    build:
+      context: ./server/api
+    ports:
+      - "80:80"
+    volumes:
+      - ./server/api:/app
+    environment:
+      - BEDROCK_HOST=bedrock-1
+      - BEDROCK_PORT=8888
+    depends_on:
+      - bedrock-1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/api/status"]
       interval: 30s
       timeout: 10s
       retries: 3
     restart: unless-stopped
+    networks:
+      - bedrock-network
 
-  # Additional nodes for 3-node cluster (uncomment for distributed setup)
-  # bedrock-node2:
-  #   build: .
+  # Optional: Load balancer for multiple API instances
+  # api-2:
+  #   build:
+  #     context: ./server/api
   #   ports:
-  #     - "81:80"      # PHP API on different port
-  #     - "8889:8888"  # Bedrock database
+  #     - "81:80"
   #   volumes:
-  #     - ./server:/app/server
-  #     - bedrock_data_2:/app/Bedrock
+  #     - ./server/api:/app
   #   environment:
-  #     - NODE_NAME=bedrock-node2
-  #     - NODE_ROLE=follower
-  #     - PEER_NODES=bedrock-node1:8888,bedrock-node3:8888
+  #     - BEDROCK_HOST=bedrock-1
+  #     - BEDROCK_PORT=8888
   #   depends_on:
-  #     - bedrock-node1
+  #     - bedrock-1
   #   healthcheck:
   #     test: ["CMD", "curl", "-f", "http://localhost/api/status"]
   #     interval: 30s
   #     timeout: 10s
   #     retries: 3
   #   restart: unless-stopped
-
-  # bedrock-node3:
-  #   build: .
-  #   ports:
-  #     - "82:80"      # PHP API on different port
-  #     - "8890:8888"  # Bedrock database
-  #   volumes:
-  #     - ./server:/app/server
-  #     - bedrock_data_3:/app/Bedrock
-  #   environment:
-  #     - NODE_NAME=bedrock-node3
-  #     - NODE_ROLE=follower
-  #     - PEER_NODES=bedrock-node1:8888,bedrock-node2:8888
-  #   depends_on:
-  #     - bedrock-node1
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost/api/status"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #   restart: unless-stopped
+  #   networks:
+  #     - bedrock-network
 
 volumes:
   bedrock_data_1:
@@ -69,3 +118,7 @@ volumes:
   #   driver: local
   # bedrock_data_3:
   #   driver: local
+
+networks:
+  bedrock-network:
+    driver: bridge
