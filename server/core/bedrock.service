@@ -1,0 +1,28 @@
+[Unit]
+Description=Bedrock Database Server with Core Plugin
+Documentation=https://bedrockdb.com/
+After=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+User=bedrock
+Group=bedrock
+WorkingDirectory=/opt/bedrock/Bedrock
+Environment="BEDROCK_DIR=/opt/bedrock/Bedrock"
+Environment="LD_LIBRARY_PATH=/opt/bedrock/server/core/lib"
+ExecStart=/opt/bedrock/Bedrock/bedrock -db /var/lib/bedrock/bedrock.db -plugins Core -pluginDir /opt/bedrock/server/core/lib
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bedrock
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/bedrock
+
+[Install]
+WantedBy=multi-user.target
+

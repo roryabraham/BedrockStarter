@@ -80,9 +80,9 @@ switch ($path) {
         break;
 
     case '/api/hello':
-        $name = $_POST['name'] ?? 'World';
+        $name = $_GET['name'] ?? $_POST['name'] ?? 'World';
 
-        echo json_encode(callBedrock("CreateToDoItem", ["name" => $name]));
+        echo json_encode(callBedrock("HelloWorld", ["name" => $name]));
         break;
 
     default:

@@ -48,7 +48,7 @@ add_library(Core SHARED ${SOURCES})
 # Create lib directory and set output directory
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 set_target_properties(Core PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib
     OUTPUT_NAME "Core"
     PREFIX ""
 )
