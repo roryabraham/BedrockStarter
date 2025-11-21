@@ -5,8 +5,11 @@ CompileFlags:
     - "-I/Users/roryabraham/PersonalProjects/BedrockStarter/Bedrock"
     - "-I/Users/roryabraham/PersonalProjects/BedrockStarter/Bedrock/libstuff"
     - "-I/Users/roryabraham/PersonalProjects/BedrockStarter/Bedrock/mbedtls/include"
+    - "-I/Users/roryabraham/PersonalProjects/BedrockStarter/server/core"
+    - "-I/opt/homebrew/opt/fmt/include"
     - "-DGIT_REVISION=dev"
     - "-DSQLITE_ENABLE_NORMALIZE"
+    - "-DFMT_SHARED"
   Remove:
     - "-W*"  # Remove all warnings for cleaner IntelliSense
 

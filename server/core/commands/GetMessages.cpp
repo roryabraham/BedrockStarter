@@ -3,6 +3,7 @@
 #include "../Core.h"
 
 #include <libstuff/libstuff.h>
+#include <fmt/format.h>
 
 GetMessages::GetMessages(SQLiteCommand&& baseCommand, BedrockPlugin_Core* plugin)
     : BedrockCommand(std::move(baseCommand), plugin) {
@@ -23,11 +24,13 @@ void GetMessages::buildResponse(SQLite& db) {
         limit = static_cast<size_t>(max<int64_t>(1, min<int64_t>(request.calc64("limit"), 100)));
     }
 
-    const string query =
+    const string query = fmt::format(
         "SELECT messageID, name, message, createdAt "
         "FROM messages "
         "ORDER BY messageID DESC "
-        "LIMIT " + SToStr(limit) + ";";
+        "LIMIT {}",
+        limit
+    );
 
     SQResult result;
     if (!db.read(query, result)) {

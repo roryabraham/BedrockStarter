@@ -63,14 +63,17 @@ bool BedrockPlugin_Core::shouldLockCommitPageOnTableConflict(const string& table
 
 void BedrockPlugin_Core::upgradeDatabase(SQLite& db) {
     bool created = false;
-    while (!db.verifyTable("messages",
-                           "CREATE TABLE messages ( "
-                           "messageID INTEGER PRIMARY KEY AUTOINCREMENT, "
-                           "name TEXT NOT NULL, "
-                           "message TEXT NOT NULL, "
-                           "createdAt INTEGER NOT NULL )",
-                           created)) {
-        SASSERT(db.write("DROP TABLE messages;"));
+    const string messagesTableSchema = R"(
+        CREATE TABLE messages (
+            messageID INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            message TEXT NOT NULL,
+            createdAt INTEGER NOT NULL
+        )
+    )";
+
+    while (!db.verifyTable("messages", messagesTableSchema, created)) {
+        SASSERT(db.write("DROP TABLE messages"));
     }
 
     // Helpful index for fetching the most recent messages

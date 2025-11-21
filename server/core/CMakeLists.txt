@@ -24,6 +24,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -fsanitize=address -f
 
 # Find required packages
 find_package(PkgConfig REQUIRED)
+find_package(fmt REQUIRED)
 
 # Set Bedrock directory (environment variable or default to submodule)
 set(BEDROCK_DIR $ENV{BEDROCK_DIR})
@@ -62,6 +63,7 @@ target_link_directories(Core PRIVATE
 target_link_libraries(Core PRIVATE
     dl
     pthread
+    fmt::fmt
 )
 
 # Create lib directory and set output directory

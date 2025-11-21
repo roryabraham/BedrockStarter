@@ -27,8 +27,43 @@ fi
 # Generate .clangd from .clangd.example if it doesn't exist
 if [[ ! -f "${PROJECT_DIR}/.clangd" ]] && [[ -f "${PROJECT_DIR}/.clangd.example" ]]; then
     info "Generating .clangd from template..."
-    sed "s|{{PROJECT_ROOT}}|${PROJECT_DIR}|g" "${PROJECT_DIR}/.clangd.example" > "${PROJECT_DIR}/.clangd"
-    success "✓ Created .clangd with project-specific paths"
+
+    # Detect fmt library path based on OS
+    FMT_INCLUDE=""
+    if command -v brew &> /dev/null; then
+        # macOS with Homebrew
+        FMT_PREFIX=$(brew --prefix fmt 2>/dev/null || echo "")
+        if [[ -n "$FMT_PREFIX" && -d "${FMT_PREFIX}/include/fmt" ]]; then
+            FMT_INCLUDE="${FMT_PREFIX}/include"
+        fi
+    elif [[ -d "/usr/include/fmt" ]]; then
+        # Linux (Ubuntu/Debian) - fmt installed via apt
+        FMT_INCLUDE="/usr/include/fmt"
+    elif [[ -d "/usr/local/include/fmt" ]]; then
+        # Linux - fmt installed from source to /usr/local
+        FMT_INCLUDE="/usr/local/include/fmt"
+    elif [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+        # Windows - vcpkg typical location
+        if [[ -d "C:/vcpkg/installed/x64-windows/include/fmt" ]]; then
+            FMT_INCLUDE="C:/vcpkg/installed/x64-windows/include/fmt"
+        fi
+    fi
+
+    # If still not found, leave empty and rely on compile_commands.json
+    if [[ -z "$FMT_INCLUDE" ]]; then
+        warn "fmt library not found in standard locations IDE may not find fmt headers"
+        FMT_INCLUDE=""
+    fi
+
+    sed -e "s|{{PROJECT_ROOT}}|${PROJECT_DIR}|g" \
+        -e "s|{{FMT_INCLUDE}}|${FMT_INCLUDE}|g" \
+        "${PROJECT_DIR}/.clangd.example" > "${PROJECT_DIR}/.clangd"
+
+    if [[ -n "$FMT_INCLUDE" ]]; then
+        success "✓ Created .clangd with project-specific paths (fmt: ${FMT_INCLUDE})"
+    else
+        success "✓ Created .clangd (fmt paths will be resolved from compile_commands.json)"
+    fi
 fi
 
 # Check if Multipass is installed

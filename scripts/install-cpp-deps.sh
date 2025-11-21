@@ -21,6 +21,7 @@ PACKAGES=(
     clang
     mold
     libpcre2-dev
+    libfmt-dev
     pkg-config
 )
 

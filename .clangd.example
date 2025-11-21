@@ -5,8 +5,11 @@ CompileFlags:
     - "-I{{PROJECT_ROOT}}/Bedrock"
     - "-I{{PROJECT_ROOT}}/Bedrock/libstuff"
     - "-I{{PROJECT_ROOT}}/Bedrock/mbedtls/include"
+    - "-I{{PROJECT_ROOT}}/server/core"
+    - "-I{{FMT_INCLUDE}}"
     - "-DGIT_REVISION=dev"
     - "-DSQLITE_ENABLE_NORMALIZE"
+    - "-DFMT_SHARED"
   Remove:
     - "-W*"  # Remove all warnings for cleaner IntelliSense
 
