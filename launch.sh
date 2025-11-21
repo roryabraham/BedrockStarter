@@ -39,7 +39,7 @@ fi
 # Check if Multipass is installed
 if ! command -v multipass &> /dev/null; then
     echo -e "${RED}Multipass is not installed!${NC}"
-    echo ""
+    echo
     echo "Please install Multipass:"
     echo "  macOS:   brew install multipass"
     echo "  Linux:   snap install multipass"
@@ -170,37 +170,37 @@ multipass exec "${VM_NAME}" -- systemctl is-active nginx > /dev/null 2>&1 && \
 echo -e "\n${GREEN}=========================================="
 echo "Setup Complete!"
 echo "==========================================${NC}"
-echo ""
+echo
 echo -e "${BLUE}Quick Start:${NC}"
 echo "  # SSH into the VM (like 'vagrant ssh')"
 echo "  multipass shell ${VM_NAME}"
 echo ""
 echo "  # Or run commands directly"
 echo "  multipass exec ${VM_NAME} -- systemctl status bedrock"
-echo ""
+echo
 echo -e "${BLUE}Access Services:${NC}"
 echo "  # Bedrock (from host)"
 echo "  nc ${VM_IP} 8888"
 echo ""
 echo "  # API (from host)"
 echo "  curl http://${VM_IP}/api/status"
-echo ""
+echo
 echo -e "${BLUE}Port Forwarding (optional):${NC}"
 echo "  # To access from localhost instead of VM IP:"
 echo "  multipass port-forward ${VM_NAME} 8888:8888  # Bedrock"
 echo "  multipass port-forward ${VM_NAME} 80:8080   # API (host:guest)"
-echo ""
+echo
 echo -e "${BLUE}Development:${NC}"
 echo "  # Project is mounted at /bedrock-starter in the VM"
 echo "  # Edit files locally - changes sync in real-time!"
 echo "  # After editing C++ code, rebuild:"
 echo "  multipass exec ${VM_NAME} -- bash -c 'cd /opt/bedrock/server/core && ninja'"
-echo ""
+echo
 echo -e "${BLUE}Service Management:${NC}"
 echo "  multipass exec ${VM_NAME} -- sudo systemctl restart bedrock"
 echo "  multipass exec ${VM_NAME} -- sudo systemctl restart nginx"
-echo ""
+echo
 echo -e "${BLUE}View Logs:${NC}"
 echo "  multipass exec ${VM_NAME} -- sudo journalctl -u bedrock -f"
-echo ""
+echo
 

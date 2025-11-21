@@ -71,7 +71,8 @@ apt-fast install -y \
     ccache \
     python3 \
     python3-jsonschema \
-    python3-jinja2
+    python3-jinja2 \
+    sqlite3
 
 # Set up Clang as default compiler
 echo -e "\n${YELLOW}[4/10] Configuring Clang compiler...${NC}"
@@ -129,26 +130,14 @@ make clean || true
 # Build only the bedrock binary, skip tests
 make bedrock --jobs "$(nproc)"
 
-# Install sqlite3 CLI tool (needed for VacuumDB)
-# Bedrock requires a specific SQLite version - get it from Expensidev VM or build from source
-echo -e "\n${YELLOW}Installing sqlite3 CLI tool...${NC}"
-if [ -f "$PROJECT_DIR/sqlite3" ]; then
-    # Use sqlite3 binary from project directory (copied from Expensidev VM)
-    cp "$PROJECT_DIR/sqlite3" /usr/local/bin/sqlite3
-    chmod +x /usr/local/bin/sqlite3
-    echo -e "${GREEN}✓ Installed sqlite3 from project directory${NC}"
-elif command -v sqlite3 &> /dev/null; then
-    # Check if system sqlite3 version matches Bedrock's SQLite (3.51.0)
+# Verify sqlite3 CLI tool (used for manual maintenance tasks like VACUUM)
+echo -e "\n${YELLOW}Verifying sqlite3 CLI tool...${NC}"
+if command -v sqlite3 &> /dev/null; then
     SQLITE_VERSION=$(sqlite3 --version 2>/dev/null | awk '{print $1}' || echo "")
-    if [ "$SQLITE_VERSION" = "3.51.0" ]; then
-        echo -e "${GREEN}✓ System sqlite3 version matches Bedrock (3.51.0)${NC}"
-    else
-        echo -e "${YELLOW}⚠ System sqlite3 version ($SQLITE_VERSION) may not match Bedrock's SQLite (3.51.0)${NC}"
-        echo -e "${YELLOW}  Consider copying sqlite3 binary from Expensidev VM to project root${NC}"
-    fi
+    echo -e "${GREEN}✓ sqlite3 CLI available (version ${SQLITE_VERSION})${NC}"
 else
-    echo -e "${RED}✗ sqlite3 not found. Please copy sqlite3 binary from Expensidev VM to project root${NC}"
-    echo -e "${YELLOW}  Or install a compatible version manually${NC}"
+    echo -e "${RED}✗ sqlite3 not found even after installation. Please install sqlite3 manually and re-run setup.${NC}"
+    exit 1
 fi
 
 # Create installation directory structure
@@ -205,7 +194,7 @@ chown -R www-data:www-data "$INSTALL_DIR/server/api"
 echo -e "\n${GREEN}=========================================="
 echo "Setup complete!"
 echo "==========================================${NC}"
-echo ""
+echo
 echo "To start services:"
 echo "  sudo systemctl start bedrock"
 echo "  sudo systemctl start php8.4-fpm"
@@ -215,9 +204,9 @@ echo "To check status:"
 echo "  sudo systemctl status bedrock"
 echo "  sudo systemctl status php8.4-fpm"
 echo "  sudo systemctl status nginx"
-echo ""
+echo
 echo "To view logs:"
 echo "  sudo journalctl -u bedrock -f"
 echo "  sudo tail -f /var/log/nginx/api_error.log"
-echo ""
+echo
 
