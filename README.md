@@ -84,6 +84,8 @@ The project runs on a single VM with two services and a modern C++ toolchain.
    # SSH into the VM
    multipass shell bedrock-starter
 
+   # Note: it will automatically open to `~`, but the project directory in the VM is `/bedrock-starter`
+
    # launch.sh also aliases "bedrock-starter" to "primary", so this simpler alternative also works
    multipass shell
 
