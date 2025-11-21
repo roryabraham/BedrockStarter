@@ -100,7 +100,6 @@ export CC=clang
 export CXX=clang++
 export PATH="/usr/lib/ccache:$PATH"
 make clean || true
-# Build only the bedrock binary, skip tests
 make bedrock --jobs "$(nproc)"
 
 # Verify sqlite3 CLI tool (used for manual maintenance tasks like VACUUM)

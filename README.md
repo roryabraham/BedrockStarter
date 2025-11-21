@@ -243,6 +243,28 @@ systemctl status bedrock
 
 ### Viewing Logs
 
+Use the colorized log viewer:
+
+```bash
+# Watch Bedrock logs (colorized)
+./scripts/watch-logs.sh
+
+# Watch nginx error logs
+./scripts/watch-logs.sh -s nginx
+
+# Watch PHP-FPM logs
+./scripts/watch-logs.sh -s php
+
+# Filter for specific patterns
+./scripts/watch-logs.sh -f HelloWorld
+./scripts/watch-logs.sh -f "error|warn"
+
+# Combine service and filter
+./scripts/watch-logs.sh -s bedrock -f "HelloWorld"
+```
+
+Or use journalctl/tail directly:
+
 ```bash
 # View Bedrock logs
 multipass exec bedrock-starter -- sudo journalctl -u bedrock -f
