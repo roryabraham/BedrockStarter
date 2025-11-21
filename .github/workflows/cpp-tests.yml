@@ -1,0 +1,50 @@
+name: C++ Tests
+
+on:
+  pull_request:
+    paths:
+      - 'server/core/**/*.cpp'
+      - 'server/core/**/*.h'
+      - 'server/core/**/CMakeLists.txt'
+      - 'server/core/test/**'
+      - 'scripts/test-cpp.sh'
+      - '.github/workflows/cpp-tests.yml'
+
+jobs:
+  cpp-tests:
+    name: Run C++ tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            clang \
+            libpcre2-dev \
+            libssl-dev \
+            pkg-config
+
+      - name: Build Bedrock libraries
+        run: |
+          cd Bedrock
+          export CC=clang
+          export CXX=clang++
+          make clean || true
+          make bedrock --jobs $(nproc)
+
+      - name: Build and run Core plugin tests
+        run: |
+          cd server/core
+          rm -rf CMakeCache.txt CMakeFiles/ build.ninja .ninja_* lib/ build/ || true
+          cmake -G Ninja .
+          ninja coretest
+          cd test
+          ./coretest
+
