@@ -1,6 +1,6 @@
 {
-    "name": "polls/api",
-    "description": "Simple PHP API for polls",
+    "name": "bedrock-starter/api",
+    "description": "Simple PHP API for Bedrock Starter",
     "type": "project",
     "repositories": [
         {
@@ -15,7 +15,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Polls\\Api\\": ""
+            "BedrockStarter\\": ""
         }
     },
     "minimum-stability": "stable",

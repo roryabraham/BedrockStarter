@@ -9,6 +9,7 @@ require __DIR__ . '/vendor/autoload.php';
 use Expensify\Bedrock\Client;
 use Monolog\Logger;
 use Monolog\Handler\SyslogHandler;
+use BedrockStarter\Log;
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -22,8 +23,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 function callBedrock(string $method, array $data = []): array {
-    $pluginLogger = new Logger("ToDoApp-plugin");
-    $pluginSyslogHandler = new SyslogHandler("todo-app-plugin");
+    $pluginLogger = new Logger("BedrockStarterPlugin");
+    $pluginSyslogHandler = new SyslogHandler("bedrock-starter-plugin");
     $pluginLogger->pushHandler($pluginSyslogHandler);
     $client = Client::getInstance([
         'clusterName' => 'todo',
@@ -41,17 +42,17 @@ function callBedrock(string $method, array $data = []): array {
     ]);
 
     try {
-        $pluginLogger->info("Calling bedrock method {$method}", ['data' => $data]);
+        Log::info("Calling bedrock method {$method}", ['data' => $data]);
         $response = $client->call($method, $data);
         if (isset($response["code"]) && $response["code"] == 200) {
             // Bedrock returns data in 'headers' for commands that set response headers
             // and in 'body' for commands that return content
             if (isset($response['headers']) && !empty($response['headers'])) {
-                $pluginLogger->info("Bedrock response headers received for {$method}", ['headers' => $response['headers']]);
+                Log::info("Bedrock response headers received for {$method}", ['headers' => $response['headers']]);
                 return $response['headers'];
             }
             if (isset($response['body']) && !empty($response['body'])) {
-                $pluginLogger->info("Bedrock response body received for {$method}", ['body' => $response['body']]);
+                Log::info("Bedrock response body received for {$method}", ['body' => $response['body']]);
                 return $response['body'];
             }
             return [];
@@ -62,11 +63,11 @@ function callBedrock(string $method, array $data = []): array {
                 http_response_code($statusCode);
             }
 
-            $pluginLogger->error("Received error response from Bedrock for {$method}", ['response' => $response]);
+            Log::error("Received error response from Bedrock for {$method}", ['response' => $response]);
             return ['error' => $response['codeLine'] ?? 'Unknown error'];
         }
     } catch (\Exception $exception) {
-        $pluginLogger->error("Exception while calling Bedrock method {$method}", ['exception' => $exception->getMessage()]);
+        Log::error("Exception while calling Bedrock method {$method}", ['exception' => $exception->getMessage()]);
         return ["error" => "Error connecting to Bedrock", "message" => $exception->getMessage()];
     }
 }
