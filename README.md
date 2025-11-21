@@ -24,9 +24,11 @@ BedrockStarter/
 │   └── common.sh          # Common shell utilities
 ├── server/
 │   ├── api/              # PHP API Service
-│   │   ├── nginx.conf   # Web server configuration
 │   │   ├── composer.json # PHP dependencies
 │   │   └── api.php       # REST API endpoints
+│   ├── config/           # Configuration files
+│   │   ├── nginx.conf    # Web server configuration
+│   │   └── bedrock.service # Bedrock systemd service
 │   ├── core/             # Bedrock Plugin
 │   │   ├── CMakeLists.txt # C++ build configuration
 │   │   ├── Core.h/.cpp   # Main plugin class (extends BedrockPlugin)
@@ -353,7 +355,7 @@ mysql -h $VM_IP -P 8888
 - **API**: `/opt/bedrock/server/api/`
 - **Database**: `/var/lib/bedrock/bedrock.db`
 - **Service Config**: `/etc/systemd/system/bedrock.service` (source: `server/config/bedrock.service`)
-- **Nginx Config**: `/etc/nginx/sites-available/bedrock-api`
+- **Nginx Config**: `/etc/nginx/sites-available/bedrock-api` (source: `server/config/nginx.conf`)
 - **Mounted Project**: `/bedrock-starter/` (synced with host)
 - **Logs**: `journalctl -u bedrock` and `/var/log/nginx/`
 

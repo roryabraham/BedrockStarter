@@ -165,7 +165,7 @@ systemctl enable bedrock.service
 
 # Configure nginx
 warn "Configuring nginx..."
-cp "$API_DIR/nginx.conf" /etc/nginx/sites-available/bedrock-api
+cp "$PROJECT_DIR/server/config/nginx.conf" /etc/nginx/sites-available/bedrock-api
 ln -sf /etc/nginx/sites-available/bedrock-api /etc/nginx/sites-enabled/bedrock-api
 rm -f /etc/nginx/sites-enabled/default
 systemctl enable nginx.service
