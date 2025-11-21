@@ -27,7 +27,7 @@ function callBedrock(string $method, array $data = []): array {
     $pluginSyslogHandler = new SyslogHandler("bedrock-starter-plugin");
     $pluginLogger->pushHandler($pluginSyslogHandler);
     $client = Client::getInstance([
-        'clusterName' => 'todo',
+        'clusterName' => 'bedrock-starter',
         'mainHostConfigs' => ['127.0.0.1' => ['port' => 8888]],
         'failoverHostConfigs' => ['127.0.0.1' => ['port' => 8888]],
         'connectionTimeout' => 1,
