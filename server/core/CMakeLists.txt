@@ -17,8 +17,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=mold")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=mold")
 
-# Enable modern C++ features and optimizations
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wall -Wextra -Wpedantic")
+# Enable modern C++ warnings (match Bedrock's libstdc++ ABI)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG -flto")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -fsanitize=address -fsanitize=undefined")
 
@@ -43,7 +43,24 @@ set(SOURCES
 )
 
 # Create shared library for the plugin
+# Plugins don't link against Bedrock's static libraries - they rely on symbols
+# from the main Bedrock binary (via -rdynamic). Only link system libraries if needed.
+# This matches the pattern used in Bedrock's Makefile for testplugin.so
 add_library(Core SHARED ${SOURCES})
+
+# Set link directories (for reference, but we don't actually link against these)
+target_link_directories(Core PRIVATE
+    ${BEDROCK_DIR}
+    ${BEDROCK_DIR}/mbedtls/library
+)
+
+# Link only system libraries - Bedrock symbols (including thread_local) will be resolved
+# at runtime from the main Bedrock binary via -rdynamic
+# This matches the Auth plugin pattern which doesn't link against stuff/bedrock
+target_link_libraries(Core PRIVATE
+    dl
+    pthread
+)
 
 # Create lib directory and set output directory
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)

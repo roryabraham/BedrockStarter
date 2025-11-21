@@ -19,6 +19,12 @@ public:
     // Plugin version (not an override - plugins don't have getVersion in base class)
     [[nodiscard]] virtual const string& getVersion() const;
     
+    // Returns plugin info (required by BedrockPlugin)
+    STable getInfo() override;
+    
+    // Override shouldLockCommitPageOnTableConflict (required by BedrockPlugin)
+    bool shouldLockCommitPageOnTableConflict(const string& tableName) const override;
+    
 private:
     static const string name;
 };

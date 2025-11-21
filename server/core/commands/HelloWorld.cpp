@@ -36,3 +36,13 @@ void HelloWorld::process(SQLite& db) {
     
     SINFO("HelloWorld command executed for: " << name);
 }
+
+string HelloWorld::serializeData() const {
+    // HelloWorld doesn't need to serialize any data
+    return "";
+}
+
+void HelloWorld::deserializeData(const string& data) {
+    // HelloWorld doesn't need to deserialize any data
+    (void)data; // Suppress unused parameter warning
+}

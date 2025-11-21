@@ -17,6 +17,10 @@ public:
     virtual bool peek(SQLite& db) override;
     virtual void process(SQLite& db) override;
     
+    // Serialize/deserialize command data (required by BedrockCommand)
+    string serializeData() const override;
+    void deserializeData(const string& data) override;
+    
 private:
     static const string _name;
     static const string _description;

@@ -129,6 +129,28 @@ make clean || true
 # Build only the bedrock binary, skip tests
 make bedrock --jobs "$(nproc)"
 
+# Install sqlite3 CLI tool (needed for VacuumDB)
+# Bedrock requires a specific SQLite version - get it from Expensidev VM or build from source
+echo -e "\n${YELLOW}Installing sqlite3 CLI tool...${NC}"
+if [ -f "$PROJECT_DIR/sqlite3" ]; then
+    # Use sqlite3 binary from project directory (copied from Expensidev VM)
+    cp "$PROJECT_DIR/sqlite3" /usr/local/bin/sqlite3
+    chmod +x /usr/local/bin/sqlite3
+    echo -e "${GREEN}✓ Installed sqlite3 from project directory${NC}"
+elif command -v sqlite3 &> /dev/null; then
+    # Check if system sqlite3 version matches Bedrock's SQLite (3.51.0)
+    SQLITE_VERSION=$(sqlite3 --version 2>/dev/null | awk '{print $1}' || echo "")
+    if [ "$SQLITE_VERSION" = "3.51.0" ]; then
+        echo -e "${GREEN}✓ System sqlite3 version matches Bedrock (3.51.0)${NC}"
+    else
+        echo -e "${YELLOW}⚠ System sqlite3 version ($SQLITE_VERSION) may not match Bedrock's SQLite (3.51.0)${NC}"
+        echo -e "${YELLOW}  Consider copying sqlite3 binary from Expensidev VM to project root${NC}"
+    fi
+else
+    echo -e "${RED}✗ sqlite3 not found. Please copy sqlite3 binary from Expensidev VM to project root${NC}"
+    echo -e "${YELLOW}  Or install a compatible version manually${NC}"
+fi
+
 # Create installation directory structure
 echo -e "\n${YELLOW}[9/10] Setting up installation directories...${NC}"
 mkdir -p "$INSTALL_DIR"

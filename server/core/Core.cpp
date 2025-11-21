@@ -40,3 +40,15 @@ const string& BedrockPlugin_Core::getVersion() const {
     static const string version = "1.0.0";
     return version;
 }
+
+STable BedrockPlugin_Core::getInfo() {
+    STable info;
+    info["name"] = getName();
+    info["version"] = getVersion();
+    return info;
+}
+
+bool BedrockPlugin_Core::shouldLockCommitPageOnTableConflict(const string& tableName) const {
+    // Use default behavior (return false)
+    return false;
+}

@@ -105,3 +105,6 @@ vcpkg_installed/
 
 # IDE configuration (user-specific)
 .clangd
+
+# SQLite binary (copied from Expensidev VM)
+sqlite3
