@@ -102,3 +102,6 @@ core.[0-9]*
 # Package managers
 conan.lock
 vcpkg_installed/
+
+# IDE configuration (user-specific)
+.clangd

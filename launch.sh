@@ -13,22 +13,6 @@ NC='\033[0m' # No Color
 
 VM_NAME="bedrock-starter"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AUTO_YES=false
-
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -y|--yes)
-            AUTO_YES=true
-            shift
-            ;;
-        *)
-            echo -e "${RED}Unknown option: $1${NC}"
-            echo "Usage: $0 [-y|--yes]"
-            exit 1
-            ;;
-    esac
-done
 
 echo -e "${BLUE}=========================================="
 echo "Bedrock Starter - Multipass Launcher"
@@ -43,6 +27,13 @@ if [ ! -d "${PROJECT_DIR}/Bedrock" ]; then
         echo -e "${YELLOW}Please run: git submodule update --init --recursive${NC}"
         exit 1
     }
+fi
+
+# Generate .clangd from .clangd.example if it doesn't exist
+if [ ! -f "${PROJECT_DIR}/.clangd" ] && [ -f "${PROJECT_DIR}/.clangd.example" ]; then
+    echo -e "${YELLOW}Generating .clangd from template...${NC}"
+    sed "s|{{PROJECT_ROOT}}|${PROJECT_DIR}|g" "${PROJECT_DIR}/.clangd.example" > "${PROJECT_DIR}/.clangd"
+    echo -e "${GREEN}✓ Created .clangd with project-specific paths${NC}"
 fi
 
 # Check if Multipass is installed
@@ -137,28 +128,6 @@ else
         echo -e "${YELLOW}Transferring Bedrock submodule (this may take a moment)...${NC}"
         COPYFILE_DISABLE=1 tar --exclude='.DS_Store' -czf - -C "${PROJECT_DIR}" Bedrock 2>/dev/null | \
             multipass exec "${VM_NAME}" -- tar xzf - -C "${PROJECT_MOUNT}/" 2>/dev/null
-    fi
-fi
-
-# Prompt user before running setup (unless -y flag is set)
-if [ "$AUTO_YES" = false ]; then
-    echo -e "\n${YELLOW}VM is ready. You can now:${NC}"
-    echo -e "  - Shell into the VM: multipass shell${NC}"
-    echo -e "    (or: multipass shell ${VM_NAME})"
-    echo -e "  - Transfer files: multipass transfer <local-file> ${VM_NAME}:<remote-path>"
-    echo -e "  - Install certificates or make other changes"
-    echo ""
-    echo -e "${BLUE}Example: Install SSL certificate${NC}"
-    echo -e "  multipass transfer ~/Expensidev/config/ssl/cloudflare-ca.pem ${VM_NAME}:/tmp/cloudflare.crt"
-    echo -e "  multipass exec ${VM_NAME} -- sudo cp /tmp/cloudflare.crt /usr/local/share/ca-certificates/"
-    echo -e "  multipass exec ${VM_NAME} -- sudo update-ca-certificates"
-    echo ""
-    read -p "Ready to proceed with setup? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${YELLOW}Setup cancelled. Run setup manually with:${NC}"
-        echo -e "  multipass exec ${VM_NAME} -- sudo bash ${PROJECT_MOUNT}/setup.sh"
-        exit 0
     fi
 fi
 

@@ -126,7 +126,8 @@ export CC=clang
 export CXX=clang++
 export PATH="/usr/lib/ccache:$PATH"
 make clean || true
-make --jobs "$(nproc)"
+# Build only the bedrock binary, skip tests
+make bedrock --jobs "$(nproc)"
 
 # Create installation directory structure
 echo -e "\n${YELLOW}[9/10] Setting up installation directories...${NC}"
@@ -160,7 +161,7 @@ chmod 755 "$DATA_DIR"
 
 # Install systemd service
 echo -e "\n${YELLOW}Installing systemd service...${NC}"
-cp "$CORE_DIR/bedrock.service" /etc/systemd/system/
+cp "$PROJECT_DIR/server/config/bedrock.service" /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable bedrock.service
 
@@ -169,6 +170,7 @@ echo -e "\n${YELLOW}Configuring nginx...${NC}"
 cp "$API_DIR/nginx.conf" /etc/nginx/sites-available/bedrock-api
 ln -sf /etc/nginx/sites-available/bedrock-api /etc/nginx/sites-enabled/bedrock-api
 rm -f /etc/nginx/sites-enabled/default
+systemctl enable nginx.service
 
 # Install PHP dependencies
 echo -e "\n${YELLOW}Installing PHP dependencies...${NC}"
