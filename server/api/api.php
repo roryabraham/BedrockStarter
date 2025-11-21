@@ -44,7 +44,7 @@ function callBedrock(string $method, array $data = []): array {
         // Log::info("Calling bedrock method $method");
         $response = $client->call($method, $data);
         if ($response["code"] == 200) {
-            return $response['body'];    
+            return $response['body'];
         } else {
             // Log::error('Received error response from bedrock: '.$response['codeLine']);
 
@@ -75,7 +75,7 @@ switch ($path) {
             'timestamp' => date('c'),
             'php_version' => PHP_VERSION
         ];
-        
+
         echo json_encode($response, JSON_PRETTY_PRINT);
         break;
 

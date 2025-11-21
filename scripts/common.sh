@@ -35,7 +35,7 @@ get_project_dir() {
         echo "/bedrock-starter"
         return
     fi
-    
+
     # common.sh is in scripts/, so go up one directory to get project root
     local script_dir
     script_dir="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)"
@@ -58,7 +58,7 @@ check_root() {
 require_command() {
     local cmd="$1"
     local instructions="${2:-Please install $cmd}"
-    
+
     if ! command -v "$cmd" &> /dev/null; then
         error "$cmd is not installed!"
         echo

@@ -98,7 +98,7 @@ else
     warn "  For real-time sync, install multipass-sshfs manually:"
     warn "  multipass exec ${VM_NAME} -- sudo snap install multipass-sshfs"
     warn "  Then: multipass mount ${PROJECT_DIR} ${VM_NAME}:${PROJECT_MOUNT}"
-    
+
     # Copy project files if mount failed
     warn "Copying project files into VM..."
     multipass exec "${VM_NAME}" -- sudo mkdir -p "${PROJECT_MOUNT}/scripts"
@@ -112,7 +112,7 @@ else
     warn "Transferring server directory..."
     COPYFILE_DISABLE=1 tar --exclude='.DS_Store' -czf - -C "${PROJECT_DIR}" server 2>/dev/null | \
         multipass exec "${VM_NAME}" -- tar xzf - -C "${PROJECT_MOUNT}/" 2>/dev/null
-    
+
     # Copy Bedrock if it exists (submodule)
     if [ -d "${PROJECT_DIR}/Bedrock" ]; then
         warn "Transferring Bedrock submodule (this may take a moment)..."

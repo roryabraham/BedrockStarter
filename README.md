@@ -7,7 +7,7 @@ A minimal starter project for [Bedrock](https://bedrockdb.com/), the rock-solid 
 Bedrock is a simple, modular, WAN-replicated, blockchain-based data foundation for global-scale applications. It's built on top of SQLite and provides:
 
 - **Fast** - Direct memory access to SQLite with distributed read scaling
-- **Simple** - Modern defaults that "just work" 
+- **Simple** - Modern defaults that "just work"
 - **Reliable** - Active/active distributed transactions with automatic failover
 - **Powerful** - Full SQLite feature set plus plugin system with job queue and cache
 
@@ -76,10 +76,10 @@ Multipass is Canonical's official VM solution that works identically on Linux, m
    ```bash
    # macOS
    brew install multipass
-   
+
    # Linux (Snap)
    snap install multipass
-   
+
    # Windows
    # Download installer from https://multipass.run/install
    ```
@@ -95,7 +95,7 @@ Multipass is Canonical's official VM solution that works identically on Linux, m
    ```bash
    ./scripts/launch.sh
    ```
-   
+
    This will:
    - Detect your system architecture (ARM or x86)
    - Launch an appropriate Ubuntu VM (ARM Ubuntu on ARM Macs for native performance)
@@ -108,7 +108,7 @@ Multipass is Canonical's official VM solution that works identically on Linux, m
    ```bash
    # SSH into the VM (equivalent to 'vagrant ssh')
    multipass shell bedrock-starter
-   
+
    # Or run commands directly from host
    multipass exec bedrock-starter -- command
    ```
@@ -117,16 +117,16 @@ Multipass is Canonical's official VM solution that works identically on Linux, m
    ```bash
    # Get VM IP address
    multipass info bedrock-starter
-   
+
    # Test Bedrock database
    VM_IP=$(multipass info bedrock-starter | grep IPv4 | awk '{print $2}')
    nc $VM_IP 8888
    Query: SELECT 1 AS hello, 'world' AS bedrock;
-   
+
    # Test API
    curl http://$VM_IP/api/status
    curl http://$VM_IP/api/hello?name=Developer
-   
+
    # Test custom plugin
    nc $VM_IP 8888
    HelloWorld name=Developer
@@ -137,7 +137,7 @@ Multipass is Canonical's official VM solution that works identically on Linux, m
    # Access from localhost instead of VM IP
    multipass port-forward bedrock-starter 8888:8888  # Bedrock
    multipass port-forward bedrock-starter 80:8080    # API (host:guest)
-   
+
    # Then access via localhost
    nc localhost 8888
    curl http://localhost:8080/api/status

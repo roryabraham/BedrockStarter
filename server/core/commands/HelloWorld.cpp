@@ -5,7 +5,7 @@
 const string HelloWorld::_name = "HelloWorld";
 const string HelloWorld::_description = "A simple hello world command for the Core plugin";
 
-HelloWorld::HelloWorld(SQLiteCommand&& baseCommand, BedrockPlugin_Core* plugin) 
+HelloWorld::HelloWorld(SQLiteCommand&& baseCommand, BedrockPlugin_Core* plugin)
     : BedrockCommand(std::move(baseCommand), plugin) {
     // Initialize the command
 }
@@ -26,14 +26,14 @@ void HelloWorld::process(SQLite& db) {
     if (name.empty()) {
         name = "World";
     }
-    
+
     // Create response
     response["message"] = "Hello, " + name + "!";
     response["from"] = "Bedrock Core Plugin";
     response["timestamp"] = STimeNow();
     response["plugin_name"] = _plugin->getName();
     response["plugin_version"] = static_cast<BedrockPlugin_Core*>(_plugin)->getVersion();
-    
+
     SINFO("HelloWorld command executed for: " << name);
 }
 
