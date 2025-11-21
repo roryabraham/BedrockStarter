@@ -23,11 +23,11 @@ success "Project directory: $PROJECT_DIR"
 success "Install directory: $INSTALL_DIR"
 
 # Update package lists
-warn "[1/10] Updating package lists..."
+info "[1/10] Updating package lists..."
 apt-get update
 
 # Install apt-fast for faster package downloads
-warn "[2/10] Installing apt-fast..."
+info "[2/10] Installing apt-fast..."
 if ! command -v apt-fast &> /dev/null; then
     apt-get install -y software-properties-common
     add-apt-repository ppa:apt-fast/stable -y
@@ -42,16 +42,16 @@ else
 fi
 
 # Install Bedrock dependencies
-warn "[3/10] Installing Bedrock dependencies..."
+info "[3/10] Installing Bedrock dependencies..."
 "${PROJECT_DIR}/scripts/install-cpp-deps.sh" --vm
 
 # Set up Clang as default compiler
-warn "[4/10] Configuring Clang compiler..."
+info "[4/10] Configuring Clang compiler..."
 update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 || true
 update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100 || true
 
 # Configure ccache
-warn "[5/10] Configuring ccache..."
+info "[5/10] Configuring ccache..."
 ccache --set-config=max_size=2G || true
 ccache --set-config=compression=true || true
 ccache --set-config=cache_dir=/var/cache/ccache || true
@@ -66,7 +66,7 @@ ln -sf /usr/bin/ccache /usr/lib/ccache/gcc || true
 ln -sf /usr/bin/ccache /usr/lib/ccache/g++ || true
 
 # Install PHP and nginx
-warn "[6/10] Installing PHP 8.4 and nginx..."
+info "[6/10] Installing PHP 8.4 and nginx..."
 add-apt-repository ppa:ondrej/php -y
 apt-get update
 apt-fast install -y \
@@ -79,7 +79,7 @@ apt-fast install -y \
     curl
 
 # Install Composer
-warn "[7/10] Installing Composer..."
+info "[7/10] Installing Composer..."
 if ! command -v composer &> /dev/null; then
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 else
@@ -87,7 +87,7 @@ else
 fi
 
 # Clone/build Bedrock
-warn "[8/10] Building Bedrock..."
+info "[8/10] Building Bedrock..."
 if [ ! -d "$BEDROCK_DIR" ]; then
     error "Bedrock directory not found at $BEDROCK_DIR"
     warn "Please ensure Bedrock is cloned as a git submodule:"
@@ -103,7 +103,7 @@ make clean || true
 make bedrock --jobs "$(nproc)"
 
 # Verify sqlite3 CLI tool (used for manual maintenance tasks like VACUUM)
-warn "Verifying sqlite3 CLI tool..."
+info "Verifying sqlite3 CLI tool..."
 if command -v sqlite3 &> /dev/null; then
     SQLITE_VERSION=$(sqlite3 --version 2>/dev/null | awk '{print $1}' || echo "")
     success "✓ sqlite3 CLI available (version ${SQLITE_VERSION})"
@@ -113,13 +113,13 @@ else
 fi
 
 # Create installation directory structure
-warn "[9/10] Setting up installation directories..."
+info "[9/10] Setting up installation directories..."
 mkdir -p "$INSTALL_DIR"
 cp -r "$BEDROCK_DIR" "$INSTALL_DIR/"
 cp -r "$PROJECT_DIR/server" "$INSTALL_DIR/"
 
 # Build Core plugin
-warn "[10/10] Building Core plugin..."
+info "[10/10] Building Core plugin..."
 cd "$INSTALL_DIR/server/core"
 export BEDROCK_DIR="$INSTALL_DIR/Bedrock"
 export LD_LIBRARY_PATH="$INSTALL_DIR/server/core/lib:$LD_LIBRARY_PATH"
@@ -128,7 +128,7 @@ cmake -G Ninja .
 ninja -j "$(nproc)"
 
 # Create bedrock user
-warn "Creating bedrock user..."
+info "Creating bedrock user..."
 if ! id "bedrock" &>/dev/null; then
     useradd -r -s /bin/false -d /opt/bedrock bedrock
 fi
@@ -143,20 +143,20 @@ chown bedrock:bedrock "$DATA_DIR"
 chmod 755 "$DATA_DIR"
 
 # Install systemd service
-warn "Installing systemd service..."
+info "Installing systemd service..."
 cp "$PROJECT_DIR/server/config/bedrock.service" /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable bedrock.service
 
 # Configure nginx
-warn "Configuring nginx..."
+info "Configuring nginx..."
 cp "$PROJECT_DIR/server/config/nginx.conf" /etc/nginx/sites-available/bedrock-api
 ln -sf /etc/nginx/sites-available/bedrock-api /etc/nginx/sites-enabled/bedrock-api
 rm -f /etc/nginx/sites-enabled/default
 systemctl enable nginx.service
 
 # Install PHP dependencies
-warn "Installing PHP dependencies..."
+info "Installing PHP dependencies..."
 cd "$INSTALL_DIR/server/api"
 composer install --no-dev --optimize-autoloader
 

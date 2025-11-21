@@ -31,7 +31,7 @@ info "Using: ${CLANG_TIDY_VERSION}"
 # Ensure we have compile_commands.json
 cd "${CORE_DIR}"
 if [ ! -f "compile_commands.json" ]; then
-    warn "compile_commands.json not found, generating..."
+    info "compile_commands.json not found, generating..."
     rm -rf CMakeCache.txt CMakeFiles/ build.ninja .ninja_* || true
     cmake -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .
 fi

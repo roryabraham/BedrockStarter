@@ -26,7 +26,7 @@ fi
 
 # Generate .clangd from .clangd.example if it doesn't exist
 if [ ! -f "${PROJECT_DIR}/.clangd" ] && [ -f "${PROJECT_DIR}/.clangd.example" ]; then
-    warn "Generating .clangd from template..."
+    info "Generating .clangd from template..."
     sed "s|{{PROJECT_ROOT}}|${PROJECT_DIR}|g" "${PROJECT_DIR}/.clangd.example" > "${PROJECT_DIR}/.clangd"
     success "✓ Created .clangd with project-specific paths"
 fi
@@ -51,8 +51,8 @@ NETWORK_ARGS=""
 if [[ "$(uname)" == "Darwin" ]]; then
     DEFAULT_IFACE=$(route get default 2>/dev/null | grep interface | awk '{print $2}')
     if [ -n "$DEFAULT_IFACE" ]; then
-        warn "Detected default network interface: $DEFAULT_IFACE"
-        warn "Using bridged networking to avoid DNS port 53 conflicts (WARP compatible)..."
+        info "Detected default network interface: $DEFAULT_IFACE"
+        info "Using bridged networking to avoid DNS port 53 conflicts (WARP compatible)..."
         NETWORK_ARGS="--network $DEFAULT_IFACE"
     fi
 fi
@@ -63,7 +63,7 @@ if multipass list | grep -q "^${VM_NAME}"; then
     read -p "Delete and recreate? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        warn "Deleting existing VM..."
+        info "Deleting existing VM..."
         multipass delete "${VM_NAME}" --purge || true
     else
         success "Using existing VM. To start it: multipass start ${VM_NAME}"
@@ -73,7 +73,7 @@ if multipass list | grep -q "^${VM_NAME}"; then
 fi
 
 # Launch VM with cloud-init (just installs dependencies)
-warn "Launching Ubuntu VM (this may take a few minutes)..."
+info "Launching Ubuntu VM (this may take a few minutes)..."
 if ! multipass launch \
     --name "${VM_NAME}" \
     --memory 4G \
@@ -88,57 +88,51 @@ if ! multipass launch \
 fi
 
 # Wait for cloud-init to complete
-warn "Waiting for cloud-init to complete..."
+info "Waiting for cloud-init to complete..."
 multipass exec "${VM_NAME}" -- cloud-init status --wait || true
 sleep 5
 
 # Set as primary if no primary exists (allows 'multipass shell' without name)
-PRIMARY_NAME=$(multipass get local.primary-name 2>/dev/null || echo "")
+PRIMARY_NAME=$(multipass get client.primary-name 2>/dev/null || echo "")
 if [ -z "$PRIMARY_NAME" ] || [ "$PRIMARY_NAME" = "None" ]; then
-    warn "Setting ${VM_NAME} as primary instance..."
-    multipass set local.primary-name="${VM_NAME}" || true
-    success "✓ You can now use 'multipass shell' without specifying the VM name"
-fi
-
-# Try to mount project directories for development
-PROJECT_MOUNT="/bedrock-starter"
-warn "Mounting project directories for real-time sync..."
-if multipass mount "${PROJECT_DIR}" "${VM_NAME}:${PROJECT_MOUNT}" 2>/dev/null; then
-    success "✓ Mount successful - files will sync in real-time"
-else
-    warn "⚠ Mount failed - copying files instead (one-time copy)"
-    warn "  For real-time sync, install multipass-sshfs manually:"
-    warn "  multipass exec ${VM_NAME} -- sudo snap install multipass-sshfs"
-    warn "  Then: multipass mount ${PROJECT_DIR} ${VM_NAME}:${PROJECT_MOUNT}"
-
-    # Copy project files if mount failed
-    warn "Copying project files into VM..."
-    multipass exec "${VM_NAME}" -- sudo mkdir -p "${PROJECT_MOUNT}/scripts"
-    multipass exec "${VM_NAME}" -- sudo chown ubuntu:ubuntu "${PROJECT_MOUNT}"
-    multipass exec "${VM_NAME}" -- sudo chown ubuntu:ubuntu "${PROJECT_MOUNT}/scripts"
-    multipass transfer "${PROJECT_DIR}/scripts/setup.sh" "${VM_NAME}:${PROJECT_MOUNT}/scripts/setup.sh"
-    multipass transfer "${PROJECT_DIR}/scripts/common.sh" "${VM_NAME}:${PROJECT_MOUNT}/scripts/common.sh"
-
-    # Use tar to transfer directories recursively (multipass transfer doesn't support -r)
-    # Suppress macOS extended attribute warnings (they're harmless)
-    warn "Transferring server directory..."
-    COPYFILE_DISABLE=1 tar --exclude='.DS_Store' -czf - -C "${PROJECT_DIR}" server 2>/dev/null | \
-        multipass exec "${VM_NAME}" -- tar xzf - -C "${PROJECT_MOUNT}/" 2>/dev/null
-
-    # Copy Bedrock if it exists (submodule)
-    if [ -d "${PROJECT_DIR}/Bedrock" ]; then
-        warn "Transferring Bedrock submodule (this may take a moment)..."
-        COPYFILE_DISABLE=1 tar --exclude='.DS_Store' -czf - -C "${PROJECT_DIR}" Bedrock 2>/dev/null | \
-            multipass exec "${VM_NAME}" -- tar xzf - -C "${PROJECT_MOUNT}/" 2>/dev/null
+    info "Setting ${VM_NAME} as primary instance..."
+    if multipass set client.primary-name="${VM_NAME}" >/dev/null 2>&1; then
+        success "✓ You can now use 'multipass shell' without specifying the VM name"
+    else
+        error "Failed to set primary instance. Run 'multipass set client.primary-name=${VM_NAME}' manually to investigate."
+        exit 1
     fi
 fi
 
+# Prepare project directory mount for development
+PROJECT_MOUNT="/bedrock-starter"
+info "Ensuring multipass-sshfs is installed inside the VM (required for mounts)..."
+if multipass exec "${VM_NAME}" -- snap list multipass-sshfs >/dev/null 2>&1; then
+    success "✓ multipass-sshfs already installed"
+else
+    info "Installing multipass-sshfs..."
+    if multipass exec "${VM_NAME}" -- sudo snap install multipass-sshfs >/dev/null 2>&1; then
+        success "✓ multipass-sshfs installed"
+    else
+        error "Failed to install multipass-sshfs automatically. Ensure the VM has internet access, then rerun this script."
+        exit 1
+    fi
+fi
+
+info "Mounting project directories for real-time sync..."
+if multipass mount "${PROJECT_DIR}" "${VM_NAME}:${PROJECT_MOUNT}" 2>/dev/null; then
+    success "✓ Mount successful - files will sync in real-time"
+else
+    error "Unable to mount ${PROJECT_DIR} to ${VM_NAME}:${PROJECT_MOUNT}. Confirm multipassd has Full Disk Access and rerun."
+    exit 1
+fi
+
 # Run the full setup script
-warn "Running setup script (this will take 5-10 minutes)..."
+info "Running setup script (this will take 5-10 minutes)..."
 multipass exec "${VM_NAME}" -- sudo bash "${PROJECT_MOUNT}/scripts/setup.sh"
 
 # Set up port forwarding
-warn "Setting up port forwarding..."
+info "Setting up port forwarding..."
 success "Bedrock will be available at: localhost:8888"
 success "API will be available at: localhost:8080"
 
@@ -150,11 +144,11 @@ VM_IPS=$(multipass info "${VM_NAME}" | grep "IPv4" | awk -F: '{print $2}' | xarg
 success "VM IP address(es): ${VM_IPS}"
 
 # Wait for setup to complete
-warn "Waiting for setup to complete (this may take 5-10 minutes)..."
-warn "You can monitor progress with: multipass exec ${VM_NAME} -- tail -f /var/log/cloud-init-output.log"
+info "Waiting for setup to complete (this may take 5-10 minutes)..."
+info "You can monitor progress with: multipass exec ${VM_NAME} -- tail -f /var/log/cloud-init-output.log"
 
 # Check if services are running
-warn "Checking service status..."
+info "Checking service status..."
 sleep 10
 
 if multipass exec "${VM_NAME}" -- systemctl is-active bedrock > /dev/null 2>&1; then

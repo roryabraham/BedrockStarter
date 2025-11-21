@@ -17,7 +17,7 @@ require_command shellcheck "Install shellcheck:
 # Get project root
 PROJECT_DIR=$(get_project_dir)
 
-warn "Running shellcheck on project scripts..."
+info "Running shellcheck on project scripts..."
 echo
 
 # Find all shell scripts in scripts/ directory (excluding Bedrock submodule)

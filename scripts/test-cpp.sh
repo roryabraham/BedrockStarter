@@ -21,14 +21,14 @@ if [ ! -f "${PROJECT_DIR}/Bedrock/libbedrock.a" ]; then
     popd > /dev/null
 fi
 
-warn "Configuring CMake..."
+info "Configuring CMake..."
 rm -rf CMakeCache.txt CMakeFiles/ build.ninja .ninja_* coretest coretest.dSYM
 cmake -G Ninja .
 
-warn "Building test target..."
+info "Building test target..."
 ninja -j "$(nproc)" coretest
 
-warn "Running tests..."
+info "Running tests..."
 cd "${CORE_DIR}/test"
 ./coretest "$@"
 
