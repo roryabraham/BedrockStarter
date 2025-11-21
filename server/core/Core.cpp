@@ -50,5 +50,6 @@ STable BedrockPlugin_Core::getInfo() {
 
 bool BedrockPlugin_Core::shouldLockCommitPageOnTableConflict(const string& tableName) const {
     // Use default behavior (return false)
+    (void)tableName; // Unused
     return false;
 }

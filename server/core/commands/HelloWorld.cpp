@@ -16,11 +16,13 @@ HelloWorld::~HelloWorld() {
 
 bool HelloWorld::peek(SQLite& db) {
     // This command doesn't need to peek at the database
-    // Return false to indicate we don't need to peek
+    (void)db; // Unused
     return false;
 }
 
 void HelloWorld::process(SQLite& db) {
+    (void)db; // Unused
+
     // Get the name parameter, default to "World"
     string name = request["name"];
     if (name.empty()) {
