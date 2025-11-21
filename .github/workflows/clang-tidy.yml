@@ -7,6 +7,7 @@ on:
       - 'server/core/**/*.h'
       - 'server/core/**/CMakeLists.txt'
       - 'scripts/clang-tidy.sh'
+      - 'scripts/install-cpp-deps.sh'
       - '.github/workflows/clang-tidy.yml'
 
 jobs:
@@ -20,17 +21,7 @@ jobs:
           submodules: recursive
 
       - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            clang-tidy \
-            cmake \
-            ninja-build \
-            clang \
-            mold \
-            libpcre2-dev \
-            libssl-dev \
-            pkg-config
+        run: sudo ./scripts/install-cpp-deps.sh --clang-tidy
 
       - name: Run clang-tidy
         run: ./scripts/clang-tidy.sh

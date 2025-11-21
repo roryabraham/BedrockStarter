@@ -8,6 +8,7 @@ on:
       - 'server/core/**/CMakeLists.txt'
       - 'server/core/test/**'
       - 'scripts/test-cpp.sh'
+      - 'scripts/install-cpp-deps.sh'
       - '.github/workflows/cpp-tests.yml'
 
 jobs:
@@ -21,16 +22,7 @@ jobs:
           submodules: recursive
 
       - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            cmake \
-            ninja-build \
-            clang \
-            mold \
-            libpcre2-dev \
-            libssl-dev \
-            pkg-config
+        run: sudo ./scripts/install-cpp-deps.sh
 
       - name: Build Bedrock libraries
         run: |

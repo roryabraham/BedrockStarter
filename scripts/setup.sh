@@ -43,22 +43,7 @@ fi
 
 # Install Bedrock dependencies
 warn "[3/10] Installing Bedrock dependencies..."
-apt-fast install -y \
-    libpcre2-dev \
-    zlib1g-dev \
-    git \
-    cmake \
-    ninja-build \
-    pkg-config \
-    clang \
-    libc++-dev \
-    libc++abi-dev \
-    mold \
-    ccache \
-    python3 \
-    python3-jsonschema \
-    python3-jinja2 \
-    sqlite3
+"${PROJECT_DIR}/scripts/install-cpp-deps.sh" --vm
 
 # Set up Clang as default compiler
 warn "[4/10] Configuring Clang compiler..."

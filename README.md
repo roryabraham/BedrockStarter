@@ -7,7 +7,7 @@ A minimal starter project for [Bedrock](https://bedrockdb.com/), the rock-solid 
 Bedrock is a simple, modular, WAN-replicated, blockchain-based data foundation for global-scale applications. It's built on top of SQLite and provides:
 
 - **Fast** - Direct memory access to SQLite with distributed read scaling
-- **Simple** - Modern defaults that "just work"
+- **Simple** - Modern defaults that "just work" 
 - **Reliable** - Active/active distributed transactions with automatic failover
 - **Powerful** - Full SQLite feature set plus plugin system with job queue and cache
 
