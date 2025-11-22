@@ -136,13 +136,6 @@ multipass exec bedrock-starter -- sudo systemctl restart bedrock
 multipass exec bedrock-starter -- sudo systemctl restart nginx
 ```
 
-**Bedrock Changes:**
-```bash
-# If you modify Bedrock itself (using all available CPU cores)
-multipass exec bedrock-starter -- bash -c 'cd /opt/bedrock/Bedrock && make --jobs $(nproc)'
-multipass exec bedrock-starter -- sudo systemctl restart bedrock
-```
-
 ## Service Management
 
 ### Starting and Stopping Services
@@ -193,20 +186,6 @@ Use the colorized log viewer:
 
 # Combine service and filter
 ./scripts/watch-logs.sh -s bedrock -f "HelloWorld"
-```
-
-Or use journalctl/tail directly:
-
-```bash
-# View Bedrock logs
-multipass exec bedrock-starter -- sudo journalctl -u bedrock -f
-
-# View PHP-FPM logs
-multipass exec bedrock-starter -- sudo journalctl -u php8.4-fpm -f
-
-# View nginx logs
-multipass exec bedrock-starter -- sudo tail -f /var/log/nginx/api_access.log
-multipass exec bedrock-starter -- sudo tail -f /var/log/nginx/api_error.log
 ```
 
 ### VM Management
@@ -336,34 +315,3 @@ This section summarizes how C++ code is built in the VM.
 - **Caching and packages (inside the VM)**
   - `apt-fast` is used for package installs
   - `ccache` is configured with a shared cache in `/var/cache/ccache` (2GB, compressed)
-
-## Why Multipass?
-
-- ✅ **100% Free** - Open source, no commercial licenses required
-- ✅ **Cross-platform** - Works identically on Linux, macOS (ARM & Intel), Windows
-- ✅ **Official** - Maintained by Canonical (Ubuntu's creators)
-- ✅ **Simple** - Single command to launch VMs
-- ✅ **Native Performance** - Runs ARM Ubuntu natively on ARM Macs (fast), x86 Ubuntu on x86 systems
-- ✅ **Real-time Sync** - Bidirectional file syncing via `multipass mount`
-- ✅ **No Complex Setup** - No need for VirtualBox, Parallels, or other providers
-
-## Coming from Vagrant?
-
-If you're familiar with Vagrant, here's the Multipass equivalent:
-
-| Vagrant Command | Multipass Equivalent |
-|----------------|---------------------|
-| `vagrant up` | `./scripts/launch.sh` or `multipass launch` |
-| `vagrant ssh` | `multipass shell bedrock-starter` |
-| `vagrant halt` | `multipass stop bedrock-starter` |
-| `vagrant destroy` | `multipass delete bedrock-starter --purge` |
-| `vagrant status` | `multipass list` |
-| `vagrant provision` | `multipass exec bedrock-starter -- sudo bash /bedrock-starter/scripts/setup.sh` |
-| Synced folders (automatic) | `multipass mount . bedrock-starter:/bedrock-starter` (manual, but real-time) |
-
-## Resources
-
-- [Bedrock Documentation](https://bedrockdb.com/)
-- [Bedrock GitHub](https://github.com/Expensify/Bedrock)
-- [Multipass Documentation](https://multipass.run/docs)
-- [Systemd Documentation](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
